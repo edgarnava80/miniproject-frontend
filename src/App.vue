@@ -1,22 +1,37 @@
 <template>
   <div id="app">
     <b-button id="userModal" @click="createUser()" variant="primary">Create new user</b-button>
-    <b-modal v-model="show" id="modal-lg" no-close-on-esc no-close-on-backdrop hide-footer centered scrollable>
+    <b-modal v-model="show" size="lg" id="modal-lg" no-close-on-esc no-close-on-backdrop hide-footer centered scrollable>
       <template #modal-header="{ }">
         <h5>{{ message }}</h5>
       </template>
       <b-container>
-        <b-form @submit.prevent="handleSubmit()">
-          <b-form-group>
-            <b-form-input v-model="firstName" type="text" placeholder="First name" class="mb-2" />
-            <b-form-input v-model="lastName" type="text" placeholder="Last name" class="mb-2" />
-            <b-form-input v-model="email" type="text" placeholder="Email" class="mb-2" />
-          </b-form-group>
-          <b-form-group>
-            <b-button class="mr-4" type="submit" variant="success">Submit</b-button>
-            <b-button @click="handleCancel()" type="cancel" variant="danger">Cancel</b-button>
-          </b-form-group>
-        </b-form>
+        <ValidationObserver v-slot="{ handleSubmit }">
+          <b-form @submit.prevent="handleSubmit(onSubmit)">
+            <b-form-group label-cols="4" label-cols-lg="2" label="First name">
+              <ValidationProvider name="first name" rules="required|alpha" v-slot="{ errors }">
+                <b-form-input v-model="firstName" type="text" class="mb-2" />
+                <span class="text-danger">{{ errors[0] }}</span>
+              </ValidationProvider>
+            </b-form-group>
+            <b-form-group label-cols="4" label-cols-lg="2" label="Last name">
+              <ValidationProvider name="last name" rules="required|alpha" v-slot="{ errors }">
+                <b-form-input v-model="lastName" type="text" class="mb-2" />
+                <span class="text-danger">{{ errors[0] }}</span>
+              </ValidationProvider>
+            </b-form-group>
+            <b-form-group label-cols="4" label-cols-lg="2" label="Email">
+              <ValidationProvider name="email" rules="required|email" v-slot="{ errors }">
+                <b-form-input v-model="email" type="text" class="mb-2" />
+                <span class="text-danger">{{ errors[0] }}</span>
+              </ValidationProvider>
+            </b-form-group>
+            <b-form-group>
+              <b-button class="mr-4" type="submit" variant="success">Submit</b-button>
+              <b-button @click="handleCancel()" type="cancel" variant="danger">Cancel</b-button>
+            </b-form-group>
+          </b-form>
+        </ValidationObserver>
       </b-container>
     </b-modal>
     <b-container>
@@ -40,12 +55,11 @@ import Vue from "vue"
 import { BootstrapVue, IconsPlugin } from "bootstrap-vue"
 import "bootstrap/dist/css/bootstrap.css"
 import "bootstrap-vue/dist/bootstrap-vue.css"
+//import { ValidationProvider } from "vee-validate"
 
 // Install BootstrapVue
 Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
-//import UsersList from "./components/UsersList.vue"
-//import UserForm from "./components/UserForm.vue"
 import { mapGetters, mapActions } from "vuex"
 
 export default {
@@ -61,9 +75,7 @@ export default {
       email: ""
     }
   },
-  // components: {
-  //   UsersList
-  // },
+  components: {},
   methods: {
     ...mapActions(["fetchUsers", "addUser", "deleteUser", "modifyUser"]),
     createUser() {
@@ -80,7 +92,7 @@ export default {
       this.lastName = item.lastName
       this.email = item.email
     },
-    handleSubmit() {
+    onSubmit() {
       this.show = false
       if (this.action === 1) {
         this.addUser({ firstName: this.firstName, lastName: this.lastName, email: this.email })
@@ -88,6 +100,7 @@ export default {
       } else if (this.action === 2) {
         this.handleEdit()
       }
+      console.log(this.items)
     },
     handleCancel() {
       this.show = false
@@ -99,12 +112,10 @@ export default {
     handleEdit() {
       console.log("handle edit")
       this.modifyUser({ id: this.id, firstName: this.firstName, lastName: this.lastName, email: this.email })
-      //console.log({ id: this.id, firstName: this.firstName, lastName: this.lastName, email: this.email })
       this.show = false
     },
     handleDelete(id) {
       this.deleteUser(id)
-      //this.fetchUsers()
       console.log(this.items)
     }
   },
